@@ -5,75 +5,80 @@ import Log from "./components/Log";
 import { WINNING_COMBINATIONS } from "./gameRules";
 import GameOver from "./components/GameOver";
 
-let BtnGame = [
+const initialBtnGame = [
   [null, null, null],
   [null, null, null],
   [null, null, null],
 ];
-let player = {
-  X: 'Player 1',
-  O: 'Player 2',
-}
+
+const initialPlayer = {
+  X: "Player 1",
+  O: "Player 2",
+};
+
 function App() {
   const [activePlayer, setActivePlayer] = useState("X");
-  const [Turn, setTurn] = useState([]);
-  const [playerName, setPlayerName] = useState(player);
+  const [turns, setTurns] = useState([]);
+  const [playerName, setPlayerName] = useState(initialPlayer);
 
   function handlerPlaterActive(rowKey, colKey) {
-    setActivePlayer((current) => (current === "X" ? "O" : "X"));
-    setTurn((prev) => {
-      let currentPlayer = "X";
-      if (prev.length > 0 && prev[0].player === "X") {
-        currentPlayer = "O";
-      }
+    setTurns((prev) => {
+      const currentPlayer = activePlayer;
       const updateTurn = [
         { board: { rowKey, colKey }, player: currentPlayer },
         ...prev,
       ];
-      // console.log(prev);
       return updateTurn;
     });
+    setActivePlayer((current) => (current === "X" ? "O" : "X"));
   }
 
-  let gameBoard = [...BtnGame.map((array) => [...array])];
-  for (let turn of Turn) {
+  let gameBoard = [...initialBtnGame.map((array) => [...array])];
+  for (let turn of turns) {
     const { board, player } = turn;
     const { rowKey, colKey } = board;
     gameBoard[rowKey][colKey] = player;
   }
+
   let winner;
   for (const combination of WINNING_COMBINATIONS) {
-    let firstCom = gameBoard[combination[0].row][combination[0].column];
-    let secondCom = gameBoard[combination[1].row][combination[1].column];
-    let thirdCom = gameBoard[combination[2].row][combination[2].column];
+    const [a, b, c] = combination;
+    let firstCom = gameBoard[a.row][a.column];
+    let secondCom = gameBoard[b.row][b.column];
+    let thirdCom = gameBoard[c.row][c.column];
     if (firstCom && firstCom === secondCom && firstCom === thirdCom) {
       winner = playerName[firstCom];
+      break;
     }
   }
-  const hasDraw = Turn.length == 9 && !winner;
+
+  const hasDraw = turns.length === 9 && !winner;
+
   function replayGame() {
-    setTurn([]);
+    setTurns([]);
+    setActivePlayer("X");
   }
+
   function handlePlayerName(symbol, playerNameChanger) {
-    setPlayerName(()=>{
-      return {
-        [symbol] : playerNameChanger
-      }
-    })
+    setPlayerName((prev) => ({
+      ...prev,
+      [symbol]: playerNameChanger,
+    }));
   }
+
   return (
     <>
       <div className="game-container">
-        <ol className="players ">
+        <ol className="players">
           <Player
             activeClass={activePlayer === "X" ? "active" : ""}
-            name={player.X}
+            name={playerName.X}
             symbol="X"
             onChangeName={handlePlayerName}
           />
           <Player
             activeClass={activePlayer === "O" ? "active" : ""}
-            name={player.O}
+            name={playerName.O}
             symbol="O"
             onChangeName={handlePlayerName}
           />
@@ -83,7 +88,7 @@ function App() {
         )}
         <GameBoard gameBoard={gameBoard} onSelect={handlerPlaterActive} />
       </div>
-      <Log turns={Turn} />
+      <Log turns={turns} />
     </>
   );
 }
